@@ -142,9 +142,11 @@ Stack: Python 3.10+, LangChain, LangGraph, Pydantic.
 - `pytest`: Run tests (**Primary Verification Method**).
 - `python src/main.py`: Run the agent manually.
 
-### 🐳 Infrastructure (`./infrastructure`)
-- MySQL Init: `./infrastructure/mysql/init/01_schema.sql`
-- Data Persistence: `./mysql_data`, `./data` (Do not touch these manually).
+###  **🐳 Infrastructure (Configuration & Data)**
+- **Docker Configuration**: Located in the root directory as `docker-compose.yml`.
+- **MySQL Initialization Script**: `Config/infrastructure/mysql/init/01_schema.sql`.
+- **Data Persistence Directory**: `Config/data/` (Contains binary data for MySQL, Redis, Kafka, and Chroma).
+  - **Note**: These are directories automatically mounted by Docker; manual modification or deletion of files within them is **strictly prohibited**.
 
 ---
 

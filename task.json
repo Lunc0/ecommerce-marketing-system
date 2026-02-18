@@ -15,7 +15,7 @@
         "如果表不存在，手动读取 01_schema.sql 并执行初始化",
         "记录当前环境状态到 progress.txt"
       ],
-      "passes": false
+      "passes": true
     },
     {
       "id": 2,

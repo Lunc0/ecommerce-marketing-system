@@ -1,1 +1,25 @@
 # Project Started
+
+## 2026-02-18 - Task 1: 基础设施与数据持久化验证
+
+### What was done:
+- Config/infrastructure/mysql/init/01_schema.sql: 创建了 MySQL 数据库表结构
+  - users (用户基础表): id, name, spending_tier, identity_tags
+  - products (商品表): sku_id, name, selling_points, price, stock
+  - promotions (促销规则表): rule_id, description, condition_json
+
+### Testing:
+- ✅ docker-compose ps: 4个核心服务均 Up 状态
+- ✅ docker exec ecommerce-redis redis-cli ping: 返回 PONG
+- ✅ MySQL 连接: 成功执行 schema 初始化
+- ✅ 数据库表 users, products, promotions 已成功创建
+- ✅ Config/data 目录挂载正常: chroma, kafka, mysql, redis
+
+### Notes:
+- Docker 容器名称冲突已清理（删除了旧容器 local-kafka, ecommerce-chroma, ecommerce-redis, ecommerce_mysql）
+- MySQL 初始化脚本在容器启动后不会自动运行，需要手动执行
+- 所有服务端口监听正常:
+  - Redis: 6379
+  - MySQL: 3306
+  - Kafka: 9092
+  - ChromaDB: 8000
