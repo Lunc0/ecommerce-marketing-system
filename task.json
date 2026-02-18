@@ -1,0 +1,163 @@
+{
+  "project": "E-commerce Real-time Marketing System",
+  "description": "基于双轨消息管道的电商实时营销系统 (Java + Python + Kafka)",
+  "tasks": [
+   {
+      "id": 1,
+      "title": "基础设施与数据持久化验证",
+      "description": "验证 Docker 容器运行状态及本地数据挂载是否正常，确保数据库表结构就绪 (Do NOT touch existing data files)",
+      "steps": [
+        "检查 docker-compose.yml 是否存在 (不要修改)",
+        "运行 'docker-compose ps' 确认 4 个核心服务 (MySQL, Redis, Kafka, ChromaDB) 均为 Up 状态",
+        "检查本地数据目录 (Config/data/mysql, Config/data/redis 等) 是否已有文件生成 (这表明 Volume 挂载成功)",
+        "检查 'infrastructure/mysql/init/01_schema.sql' 是否存在。如果不存在，请根据 architecture.md 创建该文件",
+        "连接 MySQL (localhost:3306)，检查 'users', 'products', 'promotions' 表是否存在",
+        "如果表不存在，手动读取 01_schema.sql 并执行初始化",
+        "记录当前环境状态到 progress.txt"
+      ],
+      "passes": false
+    },
+    {
+      "id": 2,
+      "title": "Java 后端骨架搭建",
+      "description": "初始化 Spring Boot 项目并配置基础依赖",
+      "steps": [
+        "使用 Maven 创建 backend-java 项目结构",
+        "修改 pom.xml 添加依赖: spring-boot-starter-web, spring-kafka, spring-boot-starter-data-redis, spring-boot-starter-data-jpa, mysql-connector-j, lombok",
+        "配置 backend-java/src/main/resources/application.yml 连接本地基础设施 (localhost)",
+        "创建 backend-java/src/main/java/com/ecommerce/marketing/MarketingApplication.java 启动类",
+        "编写一个简单的 JUnit 测试 (ContextLoads) 验证 Spring 环境启动正常",
+        "执行 mvn clean install -DskipTests 确保构建成功"
+      ],
+      "passes": false
+    },
+    {
+      "id": 3,
+      "title": "Java Kafka 生产者与消费者",
+      "description": "实现 Kafka 消息收发基础功能",
+      "steps": [
+        "创建 KafkaConfig 配置类",
+        "创建 UserBehaviorConsumer 类监听 'behavior-normal' topic",
+        "创建 HighIntentProducer 类用于发送消息到 'intent-high' topic",
+        "定义 Kafka 消息的 DTO (UserBehaviorEvent, HighIntentEvent)",
+        "编写集成测试：发送一条模拟消息到 behavior-normal，验证 Consumer 能接收并打印日志"
+      ],
+      "passes": false
+    },
+    {
+      "id": 4,
+      "title": "Java 实时计算 - 滑动窗口",
+      "description": "实现 Redis 滑动窗口算法以统计用户点击频次",
+      "steps": [
+        "创建 TrafficFilterService 服务类",
+        "实现 isHighInterest(userId) 方法：使用 Redis ZSET 存储时间戳",
+        "逻辑：ZREMRANGEBYSCORE 删除 5 分钟前的数据 -> ZADD 添加当前点击 -> ZCARD 获取当前计数",
+        "编写单元测试：模拟 5 分钟内点击 10 次，断言返回 true；模拟点击 1 次，断言返回 false"
+      ],
+      "passes": false
+    },
+    {
+      "id": 5,
+      "title": "Java 核心链路串联 (Filter & Promote)",
+      "description": "将消费、计算、生产串联起来，完成 Java 端核心逻辑",
+      "steps": [
+        "修改 UserBehaviorConsumer：调用 TrafficFilterService 进行判断",
+        "实现逻辑：如果 isHighInterest 返回 true，则调用 HighIntentProducer 发送消息",
+        "创建 User 实体类和 Repository，实现应用启动时将 MySQL 中的部分用户画像预热到 Redis (user:profile:{id})",
+        "编写端到端测试：模拟发送 11 条点击日志，验证 'intent-high' topic 中产生了一条高优消息"
+      ],
+      "passes": false
+    },
+    {
+      "id": 6,
+      "title": "Python Agent 环境搭建",
+      "description": "初始化 Python 项目环境与依赖",
+      "steps": [
+        "创建 agent-python 目录结构",
+        "创建 requirements.txt: langchain, langgraph, kafka-python, redis, mysql-connector-python, chromadb, sentence-transformers, pytest, python-dotenv",
+        "创建 .env.example 文件模版",
+        "创建 src/main.py 入口文件",
+        "编写 tests/test_env.py 验证所有库可以成功 import",
+        "执行 pip install 并运行 pytest"
+      ],
+      "passes": false
+    },
+    {
+      "id": 7,
+      "title": "Python 数据工具层 (Tools)",
+      "description": "实现 Agent 获取上下文数据的工具函数",
+      "steps": [
+        "创建 src/tools/database.py",
+        "实现 get_redis_profile(user_id) 工具：读取 Java 写入的画像",
+        "实现 get_mysql_profile(user_id) 工具：读取 MySQL 详细画像",
+        "编写测试用例：在 Docker 数据库中插入测试数据，验证 Python 能正确读取"
+      ],
+      "passes": false
+    },
+    {
+      "id": 8,
+      "title": "Python RAG 模块 (ChromaDB)",
+      "description": "实现基于向量数据库的知识检索",
+      "steps": [
+        "创建 src/tools/rag.py",
+        "初始化 ChromaDB 客户端和 SentenceTransformer (all-MiniLM-L6-v2 或 bge-m3)",
+        "实现 ingest_product_knowledge(products) 函数用于导入数据",
+        "实现 search_knowledge(query) 函数用于检索",
+        "编写测试脚本：导入几条商品卖点，搜索关键词，验证返回结果的相关性"
+      ],
+      "passes": false
+    },
+    {
+      "id": 9,
+      "title": "Python 触发器 (Kafka Trigger)",
+      "description": "实现监听 Kafka 高优意图消息",
+      "steps": [
+        "创建 src/trigger.py",
+        "使用 kafka-python 创建 Consumer 监听 'intent-high'",
+        "实现消息解析逻辑：提取 user_id 和 event_type",
+        "编写测试：使用 Java 或脚本发送一条 Kafka 消息，验证 Python 端能收到并解析"
+      ],
+      "passes": false
+    },
+    {
+      "id": 10,
+      "title": "Python 智能体编排 (LangGraph)",
+      "description": "定义 ReAct 思考流与状态图",
+      "steps": [
+        "创建 src/agent.py",
+        "定义 AgentState (包含 input, chat_history, context, outcome)",
+        "构建 StateGraph：Trigger -> GatherContext -> RAG -> Decision -> Action",
+        "使用 Mock LLM (模拟返回值) 跑通整个图的流转",
+        "编写测试：输入一个模拟的用户意图，验证图能否走到 Action 节点"
+      ],
+      "passes": false
+    },
+    {
+      "id": 11,
+      "title": "集成真实 LLM 与执行动作",
+      "description": "接入 GLM-4/DeepSeek 并实现短信发送",
+      "steps": [
+        "配置 LLM Client (OpenAI 兼容接口)",
+        "完善 System Prompt：注入 '高消费用户不推销廉价品' 等业务规则",
+        "创建 src/tools/action.py 实现 send_sms (打印日志模拟)",
+        "集成测试：调用真实 LLM，验证生成的文案是否符合用户画像"
+      ],
+      "passes": false
+    },
+    {
+      "id": 12,
+      "title": "全系统端到端验收",
+      "description": "模拟真实用户流量，验证 Java 到 Python 的全链路",
+      "steps": [
+        "确保所有 Docker 容器运行中",
+        "启动 Java Backend 服务",
+        "启动 Python Agent 服务",
+        "运行模拟脚本：在 1 秒内向 Kafka 发送 15 条同一个 userId 的点击日志",
+        "验证点 1：Java 日志显示 'Threshold reached, promoting event'",
+        "验证点 2：Python 日志显示 'Received High Intent'",
+        "验证点 3：Python 日志显示 'SMS Sent: [生成的文案]'"
+      ],
+      "passes": false
+    }
+  ]
+}
