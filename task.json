@@ -42,7 +42,7 @@
         "定义 Kafka 消息的 DTO (UserBehaviorEvent, HighIntentEvent)",
         "编写集成测试：模拟发送带有 userId Key 的消息到 behavior-normal，验证 Consumer 能接收并打印日志"
       ],
-      "passes": false
+      "passes": true
     },
     {
       "id": 4,

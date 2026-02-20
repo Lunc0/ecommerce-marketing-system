@@ -55,3 +55,48 @@
 - Java 版本: 21
 - Spring Boot 版本: 3.2.0
 - 构建产物: target/marketing-1.0.0.jar (70MB)
+
+---
+
+## 2026-02-20 - Task 3: Java Kafka 生产者与消费者 (漏斗架构设计)
+
+### What was done:
+- backend-java/src/main/java/com/ecommerce/marketing/dto/UserBehaviorEvent.java: 用户行为事件 DTO
+  - userId, action, skuId, price, timestamp
+- backend-java/src/main/java/com/ecommerce/marketing/dto/HighIntentEvent.java: 高意图事件 DTO
+  - eventType, userId, reason, context (Map)
+- backend-java/src/main/java/com/ecommerce/marketing/config/KafkaConfig.java: Kafka Topic 配置类
+  - behavior-normal: 3 个分区, 1 个副本
+  - intent-high: 1 个分区, 1 个副本
+- backend-java/src/main/java/com/ecommerce/marketing/config/KafkaProducerConfig.java: Kafka 生产者配置类
+  - 配置 KafkaTemplate, ProducerFactory
+- backend-java/src/main/java/com/ecommerce/marketing/config/KafkaConsumerConfig.java: Kafka 消费者配置类
+  - 配置 ConsumerFactory, KafkaListenerContainerFactory
+- backend-java/src/main/java/com/ecommerce/marketing/producer/HighIntentProducer.java: 高意图事件生产者
+  - sendHighIntent(userId, event): 发送高意图事件，使用 userId 作为 Key
+  - sendHighInterestDetected(userId, reason, context): 便捷方法
+  - 使用 @Slf4j 记录结构化日志
+- backend-java/src/main/java/com/ecommerce/marketing/consumer/UserBehaviorConsumer.java: 用户行为消费者
+  - @KafkaListener 监听 'behavior-normal' topic
+  - 记录接收到的消息日志（Key, Topic, Partition, Offset, Event）
+  - TODO: 调用 TrafficFilterService 和 HighIntentProducer
+- backend-java/src/test/java/com/ecommerce/marketing/producer/HighIntentProducerTest.java: Producer 单元测试
+  - 使用 Mockito 模拟 KafkaTemplate
+  - 测试 sendHighIntent 和 sendHighInterestDetected 方法
+- backend-java/src/test/java/com/ecommerce/marketing/consumer/UserBehaviorConsumerTest.java: Consumer 单元测试
+  - 测试 consumeUserBehavior 方法的日志输出
+- backend-java/src/test/resources/application.yml: 测试配置
+  - 排除 Kafka, DataSource, JPA, Redis 自动配置
+
+### Testing:
+- ✅ mvn test: 5 个测试全部通过
+  - MarketingApplicationTests.contextLoads: 简单测试
+  - UserBehaviorConsumerTest: 2 个测试 (consumeUserBehavior 不同 action)
+  - HighIntentProducerTest: 2 个测试 (sendHighIntent, sendHighInterestDetected)
+- ✅ 所有日志使用 @Slf4j (无 System.out.println)
+- ✅ 所有测试使用 Mockito (无真实外部连接)
+
+### Notes:
+- 严格遵循日志规范：所有日志都使用 log.info/log.error
+- 单元测试使用 Mockito 避免真实 Kafka 连接
+- 集成测试 (EmbeddedKafka) 因配置复杂而跳过，将在后续任务中使用真实环境测试

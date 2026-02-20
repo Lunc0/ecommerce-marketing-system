@@ -10,7 +10,9 @@
       "Bash(echo:*)",
       "Bash(\"/c/Program Files/apache-maven-3.9.11/bin/mvn\" clean install -DskipTests)",
       "Bash(\"/c/Program Files/apache-maven-3.9.11/bin/mvn\" clean install -DskipTests -U)",
-      "Bash(\"/c/Program Files/apache-maven-3.9.11/bin/mvn\" test)"
+      "Bash(\"/c/Program Files/apache-maven-3.9.11/bin/mvn\" test)",
+      "Bash(\"/c/Program Files/apache-maven-3.9.11/bin/mvn\" clean test)",
+      "Bash(cat:*)"
     ]
   }
 }
