@@ -2,7 +2,7 @@
   "project": "E-commerce Real-time Marketing System",
   "description": "基于双轨消息管道的电商实时营销系统 (Java + Python + Kafka)",
   "tasks": [
-   {
+{
       "id": 1,
       "title": "基础设施与数据持久化验证",
       "description": "验证 Docker 容器运行状态及本地数据挂载是否正常，确保数据库表结构就绪 (Do NOT touch existing data files)",
@@ -29,18 +29,18 @@
         "编写一个简单的 JUnit 测试 (ContextLoads) 验证 Spring 环境启动正常",
         "执行 mvn clean install -DskipTests 确保构建成功"
       ],
-      "passes": false
+      "passes": true
     },
     {
       "id": 3,
-      "title": "Java Kafka 生产者与消费者",
-      "description": "实现 Kafka 消息收发基础功能",
+      "title": "Java Kafka 生产者与消费者 (漏斗架构设计)",
+      "description": "实现 Kafka 消息收发基础功能，并严格配置分区与路由策略",
       "steps": [
-        "创建 KafkaConfig 配置类",
-        "创建 UserBehaviorConsumer 类监听 'behavior-normal' topic",
-        "创建 HighIntentProducer 类用于发送消息到 'intent-high' topic",
+        "创建 KafkaConfig 配置类：使用 Spring 的 NewTopic Bean 显式声明 'behavior-normal' (3个分区, 1个副本) 和 'intent-high' (1个分区, 1个副本)",
+        "创建 UserBehaviorConsumer 类：监听 'behavior-normal' topic (假设并发消费)",
+        "创建 HighIntentProducer 类：实现发送消息到 'intent-high' topic，注意：必须使用 userId 作为 Kafka 消息的 Key (KafkaTemplate.send(topic, key, data)) 以保证同一用户的顺序性",
         "定义 Kafka 消息的 DTO (UserBehaviorEvent, HighIntentEvent)",
-        "编写集成测试：发送一条模拟消息到 behavior-normal，验证 Consumer 能接收并打印日志"
+        "编写集成测试：模拟发送带有 userId Key 的消息到 behavior-normal，验证 Consumer 能接收并打印日志"
       ],
       "passes": false
     },
@@ -62,9 +62,9 @@
       "description": "将消费、计算、生产串联起来，完成 Java 端核心逻辑",
       "steps": [
         "修改 UserBehaviorConsumer：调用 TrafficFilterService 进行判断",
-        "实现逻辑：如果 isHighInterest 返回 true，则调用 HighIntentProducer 发送消息",
+        "实现逻辑：如果 isHighInterest 返回 true，则调用 HighIntentProducer 发送消息 (透传 userId 作为 Key)",
         "创建 User 实体类和 Repository，实现应用启动时将 MySQL 中的部分用户画像预热到 Redis (user:profile:{id})",
-        "编写端到端测试：模拟发送 11 条点击日志，验证 'intent-high' topic 中产生了一条高优消息"
+        "编写端到端测试：模拟向 behavior-normal 发送同一个 userId 的 11 条点击日志，验证 'intent-high' topic 中成功产生了一条以该 userId 为 Key 的高优消息"
       ],
       "passes": false
     },
@@ -135,7 +135,7 @@
     {
       "id": 11,
       "title": "集成真实 LLM 与执行动作",
-      "description": "接入 GLM-4/DeepSeek 并实现短信发送",
+      "description": "接入 GLM-4并实现短信发送",
       "steps": [
         "配置 LLM Client (OpenAI 兼容接口)",
         "完善 System Prompt：注入 '高消费用户不推销廉价品' 等业务规则",

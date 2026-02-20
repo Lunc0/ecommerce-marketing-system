@@ -23,3 +23,35 @@
   - MySQL: 3306
   - Kafka: 9092
   - ChromaDB: 8000
+
+---
+
+## 2026-02-20 - Task 2: Java 后端骨架搭建
+
+### What was done:
+- backend-java/pom.xml: 配置 Maven 依赖
+  - spring-boot-starter-web
+  - spring-kafka
+  - spring-boot-starter-data-redis
+  - spring-boot-starter-data-jpa
+  - mysql-connector-j
+  - lombok
+  - spring-boot-starter-test
+  - spring-kafka-test
+- backend-java/src/main/java/com/ecommerce/marketing/MarketingApplication.java: Spring Boot 启动类
+- backend-java/src/main/resources/application.yml: 配置基础设施连接
+  - Kafka: localhost:9092
+  - Redis: localhost:6379
+  - MySQL: localhost:3306 (ecommerce_db)
+- backend-java/src/test/java/com/ecommerce/marketing/MarketingApplicationTests.java: JUnit 测试类 (ContextLoads)
+
+### Testing:
+- ✅ mvn clean install -DskipTests: 构建成功，生成 JAR
+- ✅ mvn test: 1 个测试通过 (MarketingApplicationTests.contextLoads)
+- ✅ Spring Context 加载成功
+- ✅ JPA EntityManagerFactory 初始化成功
+
+### Notes:
+- Java 版本: 21
+- Spring Boot 版本: 3.2.0
+- 构建产物: target/marketing-1.0.0.jar (70MB)
