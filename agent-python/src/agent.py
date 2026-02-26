@@ -28,7 +28,7 @@ class MarketingAgent:
     """
 
     # System Prompt with business rules
-    SYSTEM_PROMPT = """你是一个电商营销智能体，负责根据用户行为决定是否发送营销消息。
+    SYSTEM_PROMPT = """你是一个专业的电商营销智能体，负责根据用户行为和画像决定是否发送营销消息。
 
 ## 可用工具:
 1. get_user_context(user_id): 获取用户的完整画像信息（Redis 和 MySQL）
@@ -47,22 +47,54 @@ class MarketingAgent:
    - 输入: JSON格式，包含user_id, reason
    - 返回: 跳过记录
 
-## 业务规则 (IMPORTANT):
-- 高消费用户 (spending_tier=HIGH): 不推荐廉价品，只推送高价值商品
-- 价格敏感用户 (标签包含 price_sensitive): 可以推送折扣、优惠信息
-- 新用户 (标签包含 new_user): 推送新人优惠券
-- 累计消费高的用户: 推送会员权益、专属商品
+## 业务规则 (IMPORTANT - 必须严格遵守):
+
+### 高消费用户 (spending_tier=HIGH)
+- ❌ 不推荐廉价品（价格 < 100 元）
+- ✅ 只推送高价值商品（价格 > 500 元）
+- ✅ 推送限量版、联名款、高端品牌
+- ❌ 避免使用"省钱"、"优惠"等字眼
+- ✅ 使用"专属"、"尊享"、"奢华"等词汇
+
+### 价格敏感用户 (标签包含 price_sensitive)
+- ✅ 重点推送折扣、优惠券信息
+- ✅ 推送性价比高的商品
+- ✅ 突出降价幅度、优惠力度
+- ✅ 使用"限时"、"秒杀"、"抢购"等紧迫感词汇
+
+### 新用户 (标签包含 new_user)
+- ✅ 推送新人专属优惠券
+- ✅ 推送热门商品（销量高、好评多）
+- ✅ 推送入门级商品（价格 100-300 元）
+- ✅ 使用"新人专享"、"首单优惠"等吸引词汇
+
+### 会员用户 (标签包含 vip / premium)
+- ✅ 推送会员专属权益
+- ✅ 推送新品优先购
+- ✅ 推送积分兑换商品
+- ✅ 使用"会员专享"、"贵宾礼遇"等尊享词汇
+
+### 冷却期规则
+- 如果用户在过去 1 小时内已收到营销消息，跳过本次
+- 如果用户在过去 24 小时内已收到 3 条以上消息，跳过本次
 
 ## 思考流程:
 1. 首先调用 get_user_context() 了解用户画像
-2. 根据用户画像调用 search_knowledge() 查找合适商品
+2. 根据用户画像和消费等级调用 search_knowledge() 查找合适商品
 3. 判断是否应该营销:
+   - 检查冷却期规则
    - 如果符合条件，调用 send_sms() 发送消息
-   - 如果不符合条件（如刚发送过、用户画像不匹配），调用 skip_marketing()
+   - 如果不符合条件，调用 skip_marketing() 并说明原因
 4. 返回最终决策和结果
 
+## 短信文案要求:
+- 长度控制在 70 字以内
+- 突出核心卖点和优惠信息
+- 语言简洁有力，有行动号召
+- 符合用户画像的语言风格
+
 ## 输入格式:
-输入是一个 JSON 字符串，包含:
+输入是一个消息，包含:
 - user_id: 用户ID (必需)
 - event_type: 事件类型 (可选)
 
@@ -78,6 +110,46 @@ class MarketingAgent:
             llm: LangChain ChatOpenAI instance. If None, creates a mock LLM for testing.
         """
         load_dotenv()
+
+        self.llm = llm
+        self.agent_graph: Optional[Any] = None
+        self.tools: List[Tool] = []
+
+        self._initialize_tools()
+
+        if llm:
+            self._initialize_agent()
+
+    @classmethod
+    def from_env(cls) -> 'MarketingAgent':
+        """
+        Create Marketing Agent from environment variables.
+
+        Reads OPENAI_API_KEY and OPENAI_BASE_URL from environment.
+        If API key is not configured, returns mock agent.
+
+        Returns:
+            MarketingAgent instance
+        """
+        load_dotenv()
+
+        api_key = os.getenv('OPENAI_API_KEY')
+        base_url = os.getenv('OPENAI_BASE_URL', 'https://api.openai.com/v1')
+
+        if api_key:
+            # Configure real LLM
+            llm = ChatOpenAI(
+                api_key=api_key,
+                base_url=base_url,
+                model=os.getenv('OPENAI_MODEL', 'gpt-4o'),
+                temperature=0.7,
+                max_tokens=500
+            )
+            logger.info(f"Created MarketingAgent with real LLM (model: {os.getenv('OPENAI_MODEL', 'gpt-4o')})")
+            return cls(llm=llm)
+        else:
+            logger.warning("OPENAI_API_KEY not configured, using mock agent")
+            return cls.create_mock()
 
         self.llm = llm
         self.agent_graph: Optional[Any] = None
@@ -268,7 +340,7 @@ class MockChatModel:
         self.responses = responses or []
         self.call_count = 0
 
-    def bind_tools(self, tools):
+    def bind_tools(self, tools, **kwargs):
         """Mock bind_tools method."""
         return self
 
@@ -276,12 +348,15 @@ class MockChatModel:
         """Mock invoke that returns predetermined response."""
         self.call_count += 1
 
+        # Import here to avoid circular dependency
+        from langchain_core.messages import AIMessage
+
         # Return a simple response for testing
         if self.responses and self.call_count <= len(self.responses):
-            return MockMessage(content=self.responses[self.call_count - 1])
+            return AIMessage(content=self.responses[self.call_count - 1])
 
         # Default response
-        return MockMessage(content="我已完成分析和营销决策。")
+        return AIMessage(content="我已完成分析和营销决策。")
 
     @property
     def _llm_type(self):
@@ -294,21 +369,27 @@ class MockMessage:
     def __init__(self, content: str = ""):
         self.content = content
 
+    def __repr__(self):
+        return f"MockMessage(content={self.content!r})"
+
 
 # Convenience function
-def create_marketing_agent(llm: Optional[ChatOpenAI] = None) -> MarketingAgent:
+def create_marketing_agent(llm: Optional[ChatOpenAI] = None, use_env: bool = False) -> MarketingAgent:
     """
     Create a Marketing Agent instance.
 
     Args:
-        llm: ChatOpenAI instance. If None, creates mock agent.
+        llm: ChatOpenAI instance. If None and use_env is False, creates mock agent.
+        use_env: If True and llm is None, creates agent from environment variables.
 
     Returns:
         MarketingAgent instance
     """
-    if llm is None:
-        return MarketingAgent.create_mock()
-    return MarketingAgent(llm=llm)
+    if llm is not None:
+        return MarketingAgent(llm=llm)
+    if use_env:
+        return MarketingAgent.from_env()
+    return MarketingAgent.create_mock()
 
 
 if __name__ == "__main__":
