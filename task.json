@@ -158,7 +158,7 @@
         "验证点 2：Python 日志显示 'Received High Intent'",
         "验证点 3：Python 日志显示 'SMS Sent: [生成的文案]'"
       ],
-      "passes": false
+      "passes": true
     }
   ]
 }

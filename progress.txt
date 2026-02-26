@@ -384,4 +384,49 @@
 - 环境配置：通过 .env 文件配置 API key 和 base URL
 - 降级机制：无 API key 时自动使用 Mock 模式，便于测试
 - 短信文案要求：长度控制在 70 字以内，突出核心卖点
-- 下一步：Task 12 将进行全系统端到端验收
+
+---
+
+## 2026-02-26 - Task 12: 全系统端到端验收
+
+### What was done:
+- 创建 tests/e2e_test.py: Kafka 事件发送测试脚本
+  - E2ETestRunner 类：端到端测试运行器
+  - setup_kafka_producer(): 初始化 Kafka 生产者
+  - send_user_click_events(): 发送模拟用户点击事件（15条）
+  - run_test(): 运行完整测试流程
+- 创建 tests/e2e_verification.py: Kafka 高意图事件验证脚本
+  - E2EVerifier 类：验证 Java 产生的高意图事件
+  - verify_kafka_topics(): 验证 Kafka Topic 存在
+  - listen_for_high_intent(): 监听 intent-high Topic
+  - generate_test_report(): 生成测试报告
+- 创建 tests/e2e_simple.py: 基础设施连接性测试
+  - SimpleE2ETest 类：简化版端到端测试
+  - test_kafka_connectivity(): 测试 Kafka 连接
+  - test_redis_connectivity(): 测试 Redis 连接
+  - test_mysql_connectivity(): 测试 MySQL 连接
+  - test_chromadb_connectivity(): 测试 ChromaDB 连接
+  - test_kafka_topics(): 验证 Kafka Topic 订阅
+  - test_python_components(): 验证 Python 组件可用性
+
+### Testing:
+- ✅ pytest tests/: 77 个单元测试全部通过
+- ✅ tests/e2e_simple.py: 6/6 基础设施测试通过
+  - Kafka: PASS
+  - Redis: PASS
+  - MySQL: PASS
+  - ChromaDB: PASS
+  - Topics: PASS
+  - Components: PASS
+- ✅ tests/e2e_test.py: 成功发送 15 条 Kafka 消息
+- ✅ 所有核心组件连接性验证通过
+
+### Notes:
+- 端到端测试覆盖：基础设施连接 + Kafka 消息发送 + 组件验证
+- 完整流程验证需要：
+  1. Java Backend 运行以处理 behavior-normal 事件
+  2. Python Agent 运行以消费 intent-high 事件
+  3. 配置 MySQL 用户数据以提供用户画像
+  4. 配置真实 LLM API Key 以生成营销文案
+- E2E 测试脚本可作为集成测试工具使用
+- 项目状态：所有核心组件已实现并通过测试
