@@ -117,7 +117,7 @@
         "实现消息解析逻辑：提取 user_id 和 event_type",
         "编写测试：使用 Java 或脚本发送一条 Kafka 消息，验证 Python 端能收到并解析"
       ],
-      "passes": false
+      "passes": true
     },
     {
       "id": 10,

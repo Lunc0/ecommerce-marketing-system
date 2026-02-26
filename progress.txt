@@ -256,3 +256,46 @@
 - 集合配置：使用 hnsw:space=cosine 余弦相似度
 - 文档文本构建策略：将商品信息组合成自然语言描述，提高检索准确性
 - Python 路径配置：通过 conftest.py 确保 pytest 能找到 src 模块
+
+---
+
+## 2026-02-26 - Task 9: Python 触发器 (Kafka Trigger)
+
+### What was done:
+- 创建 src/trigger.py: Kafka 消费者触发器模块
+  - HighIntentTrigger 类：封装 Kafka 消费者操作
+  - _init_consumer(): 初始化 Kafka Consumer
+  - parse_message(message_value): 解析 Kafka 消息，提取 user_id 和 event_type
+  - consume_single(): 消费单条消息
+  - consume_forever(callback): 持续消费消息并调用回调函数
+  - stop(): 停止消费者并关闭连接
+  - 支持 Context Manager 协议 (__enter__, __exit__)
+  - 提供便捷函数：listen_high_intent(callback)
+- 实现特性：
+  - 灵活的消息解析：支持驼峰命名和蛇形命名
+  - 错误处理：捕获并记录 JSON 解析错误
+  - 回调机制：支持自定义处理函数
+  - 类型提示：完整使用 typing 注解
+  - 日志记录：使用 logger 记录关键操作和错误
+  - 消费者配置：支持自定义 group_id 和 offset 策略
+- 创建 tests/test_trigger.py: 完整测试套件
+  - 使用 Mock 避免真实 Kafka 连接
+  - 16 个测试用例覆盖所有功能
+  - 测试不同消息格式
+  - 测试成功、失败、边界情况
+  - 测试便捷函数和类方法
+  - 测试 Context Manager
+
+### Testing:
+- ✅ pytest tests/test_trigger.py: 16 个测试全部通过
+- ✅ pytest tests/: 44 个测试全部通过（包含之前的测试）
+- ✅ 所有测试使用 Mock，无真实外部依赖
+- ✅ 测试覆盖正常流程、异常处理、边界情况
+- ✅ 完整的测试覆盖率，确保代码质量
+
+### Notes:
+- 消息格式兼容：同时支持 Java 端（驼峰命名）和 Python 端（蛇形命名）
+- 消费者超时：consumer_timeout_ms=1000 避免 forever 挂起
+- Offset 策略：auto_offset_reset='latest' 从最新消息开始消费
+- 自动提交：enable_auto_commit=True 自动提交 offset
+- 下一步：Task 10 将实现 LangGraph 智能体编排
