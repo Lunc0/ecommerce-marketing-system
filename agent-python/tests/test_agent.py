@@ -6,12 +6,12 @@ Tests LangChain Agent initialization and tool usage with mocks.
 import pytest
 from unittest.mock import Mock, patch
 from langchain_openai import ChatOpenAI
+from langchain_core.messages import AIMessage
 
 from src.agent import (
     MarketingAgent,
     create_marketing_agent,
-    MockChatModel,
-    MockMessage
+    MockChatModel
 )
 from src.tools.action import MarketingActions
 
@@ -63,7 +63,7 @@ class TestMarketingAgent:
     def test_agent_initialization(self, mock_create_agent, mock_llm):
         """Test that agent is created with LangChain."""
         mock_graph = Mock()
-        mock_graph.invoke.return_value = {'messages': [MockMessage(content="测试结果")]}
+        mock_graph.invoke.return_value = {'messages': [AIMessage(content="测试结果")]}
         mock_create_agent.return_value = mock_graph
 
         agent = MarketingAgent(llm=mock_llm)
@@ -189,7 +189,7 @@ class TestMockChatModel:
         result2 = llm.invoke("test message 2")
 
         assert llm.call_count == 2
-        assert isinstance(result1, MockMessage)
+        assert isinstance(result1, AIMessage)
         assert result1.content == "响应1"
         assert result2.content == "响应2"
 
@@ -200,7 +200,7 @@ class TestMockChatModel:
         result = llm.invoke("test message")
 
         assert llm.call_count == 1
-        assert isinstance(result, MockMessage)
+        assert isinstance(result, AIMessage)
         assert len(result.content) > 0
 
     def test_bind_tools(self):
@@ -209,22 +209,6 @@ class TestMockChatModel:
         result = llm.bind_tools([])
 
         assert result is llm
-
-
-class TestMockMessage:
-    """Test cases for MockMessage class."""
-
-    def test_initialization(self):
-        """Test MockMessage initialization."""
-        msg = MockMessage(content="test content")
-
-        assert msg.content == "test content"
-
-    def test_initialization_default(self):
-        """Test MockMessage with default content."""
-        msg = MockMessage()
-
-        assert msg.content == ""
 
 
 class TestCreateMarketingAgent:
@@ -254,7 +238,7 @@ class TestAgentIntegration:
         """Test full agent workflow from event to decision."""
         # Setup mocks
         mock_graph = Mock()
-        mock_message = MockMessage(content="已为用户发送营销短信")
+        mock_message = AIMessage(content="已为用户发送营销短信")
         mock_graph.invoke.return_value = {'messages': [mock_message]}
         mock_create_agent.return_value = mock_graph
 
