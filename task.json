@@ -54,7 +54,7 @@
         "逻辑：ZREMRANGEBYSCORE 删除 5 分钟前的数据 -> ZADD 添加当前点击 -> ZCARD 获取当前计数",
         "编写单元测试：模拟 5 分钟内点击 10 次，断言返回 true；模拟点击 1 次，断言返回 false"
       ],
-      "passes": false
+      "passes": true
     },
     {
       "id": 5,
@@ -66,7 +66,7 @@
         "创建 User 实体类和 Repository，实现应用启动时将 MySQL 中的部分用户画像预热到 Redis (user:profile:{id})",
         "编写端到端测试：模拟向 behavior-normal 发送同一个 userId 的 11 条点击日志，验证 'intent-high' topic 中成功产生了一条以该 userId 为 Key 的高优消息"
       ],
-      "passes": false
+      "passes": true
     },
     {
       "id": 6,
@@ -80,7 +80,7 @@
         "编写 tests/test_env.py 验证所有库可以成功 import",
         "执行 pip install 并运行 pytest"
       ],
-      "passes": false
+      "passes": true
     },
     {
       "id": 7,

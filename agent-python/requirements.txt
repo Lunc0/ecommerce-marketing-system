@@ -1,0 +1,10 @@
+langchain
+langgraph
+kafka-python
+redis
+mysql-connector-python
+chromadb
+sentence-transformers
+pytest
+python-dotenv
+openai
