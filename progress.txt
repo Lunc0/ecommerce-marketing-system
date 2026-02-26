@@ -179,3 +179,38 @@
 - ChromaDB 因依赖冲突暂时从测试中排除，将在后续任务中单独处理
 - 所有依赖包安装成功，Python 环境已就绪，准备进行下一步开发
 - LangGraph 1.0.9 和 LangChain 1.2.10 版本兼容性良好
+
+---
+
+## 2026-02-26 - Task 7: Python 数据工具层 (Tools)
+
+### What was done:
+- 创建 src/tools/database.py: 数据库工具类
+  - DatabaseTools 类：封装 Redis 和 MySQL 连接管理
+  - get_redis_profile(user_id): 从 Redis 读取用户画像（Java 预热数据）
+  - get_mysql_profile(user_id): 从 MySQL 读取详细用户信息
+  - get_user_context(user_id): 合并 Redis 和 MySQL 数据获取完整上下文
+  - 提供便捷函数：get_redis_profile(), get_mysql_profile(), get_user_context()
+- 实现特性：
+  - 懒加载连接：只在需要时建立数据库连接
+  - 错误处理：捕获并记录异常，返回 None 而非抛出异常
+  - 类型提示：完整使用 typing 注解
+  - 连接管理：提供 close() 方法正确关闭连接
+  - 日志记录：使用 logger 记录关键操作和错误
+- 创建 tests/test_database.py: 完整测试套件
+  - 使用 Mock 避免真实数据库连接
+  - 10 个测试用例覆盖所有功能
+  - 测试成功和失败场景
+  - 测试便捷函数和类方法
+
+### Testing:
+- ✅ pytest tests/test_database.py: 10 个测试全部通过
+- ✅ 所有测试使用 Mock，无真实外部依赖
+- ✅ 测试覆盖正常流程、异常处理、边界情况
+- ✅ 完整的测试覆盖率，确保代码质量
+
+### Notes:
+- 数据格式化：统一返回 Dict[str, Any] 类型，便于 Agent 使用
+- 性能考虑：使用连接懒加载，减少资源占用
+- 扩展性：设计为可轻松添加其他数据源
+- 与 Java 端协作：读取 Java 写入的 Redis 画像数据

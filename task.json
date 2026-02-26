@@ -92,7 +92,7 @@
         "实现 get_mysql_profile(user_id) 工具：读取 MySQL 详细画像",
         "编写测试用例：在 Docker 数据库中插入测试数据，验证 Python 能正确读取"
       ],
-      "passes": false
+      "passes": true
     },
     {
       "id": 8,
