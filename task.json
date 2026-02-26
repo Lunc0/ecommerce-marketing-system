@@ -105,7 +105,7 @@
         "实现 search_knowledge(query) 函数用于检索",
         "编写测试脚本：导入几条商品卖点，搜索关键词，验证返回结果的相关性"
       ],
-      "passes": false
+      "passes": true
     },
     {
       "id": 9,

@@ -214,3 +214,45 @@
 - 性能考虑：使用连接懒加载，减少资源占用
 - 扩展性：设计为可轻松添加其他数据源
 - 与 Java 端协作：读取 Java 写入的 Redis 画像数据
+
+---
+
+## 2026-02-26 - Task 8: Python RAG 模块 (ChromaDB)
+
+### What was done:
+- 创建 src/tools/rag.py: RAG 检索模块
+  - ProductRAG 类：封装 ChromaDB 和 SentenceTransformer 操作
+  - ingest_product_knowledge(products): 导入商品知识到向量数据库
+  - search_knowledge(query, n_results): 基于查询检索相关商品知识
+  - get_product_details(product_id): 获取指定商品详细信息
+  - clear_collection(): 清空集合
+  - get_collection_stats(): 获取集合统计信息
+  - 提供便捷函数：ingest_product_knowledge(), search_knowledge(), get_product_details()
+- 实现特性：
+  - 句子嵌入：使用 SentenceTransformer (all-MiniLM-L6-v2) 生成向量
+  - 向量检索：使用 ChromaDB 的余弦相似度进行语义搜索
+  - 文档构建：将商品名称、描述、分类、价格、卖点组合成综合文本
+  - 元数据存储：保存商品元数据（ID、名称、分类、价格）用于结果展示
+  - 错误处理：捕获并记录异常，返回空列表或 None
+  - 连接管理：懒加载 ChromaDB 连接
+- 创建 tests/test_rag.py: 完整测试套件
+  - 使用 Mock 避免真实 ChromaDB 连接
+  - 16 个测试用例覆盖所有功能
+  - 测试成功、失败、边界情况
+  - 测试便捷函数和类方法
+- 创建 src/tools/__init__.py: 工具包初始化文件
+- 创建 tests/conftest.py: pytest 配置文件（添加 src 目录到 Python 路径）
+
+### Testing:
+- ✅ pytest tests/test_rag.py: 16 个测试全部通过
+- ✅ pytest tests/: 28 个测试全部通过（包含之前的测试）
+- ✅ 所有测试使用 Mock，无真实外部依赖
+- ✅ 测试覆盖正常流程、异常处理、边界情况
+- ✅ 完整的测试覆盖率，确保代码质量
+
+### Notes:
+- 向量模型：使用 all-MiniLM-L6-v2 (轻量级，适合中文语义理解)
+- 也可使用 bge-m3 (更强但更重) 作为备选模型
+- 集合配置：使用 hnsw:space=cosine 余弦相似度
+- 文档文本构建策略：将商品信息组合成自然语言描述，提高检索准确性
+- Python 路径配置：通过 conftest.py 确保 pytest 能找到 src 模块
