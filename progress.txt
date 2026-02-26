@@ -298,4 +298,48 @@
 - 消费者超时：consumer_timeout_ms=1000 避免 forever 挂起
 - Offset 策略：auto_offset_reset='latest' 从最新消息开始消费
 - 自动提交：enable_auto_commit=True 自动提交 offset
-- 下一步：Task 10 将实现 LangGraph 智能体编排
+
+---
+
+## 2026-02-26 - Task 10: Python 智能体编排 (LangChain)
+
+### What was done:
+- 创建 src/tools/action.py: 营销动作工具模块
+  - MarketingActions 类：封装营销动作执行
+  - send_sms(user_id, phone, message): 发送营销短信
+  - send_email(): 发送营销邮件
+  - push_notification(): 发送推送通知
+  - skip_marketing(): 跳过本次营销
+  - 支持便捷函数：send_sms(), skip_marketing()
+- 创建 src/agent.py: LangChain 营销智能体
+  - MarketingAgent 类：基于 LangChain Agent API 的智能体
+  - SYSTEM_PROMPT: 定义业务规则和思考流程
+    - 高消费用户不推销廉价品
+    - 价格敏感用户推送优惠信息
+    - 新用户推送新人优惠券
+  - 4 个工具包装器：
+    - get_user_context: 获取用户画像
+    - search_knowledge: 检索商品知识
+    - send_sms: 发送营销短信
+    - skip_marketing: 跳过营销
+  - process_event(event_data): 处理高意图事件并做出决策
+  - create_mock(): 创建 Mock 模式用于测试
+- 创建 MockChatModel 和 MockMessage: 用于测试的模拟类
+- 创建 tests/test_agent.py: 完整测试套件
+  - 24 个测试用例覆盖所有功能
+  - 测试工具包装、Mock LLM、集成流程
+  - 使用 Mock 避免真实外部依赖
+- 更新 requirements.txt: 添加 langchain-openai 依赖
+- 更新 src/tools/__init__.py: 导出 action 模块
+
+### Testing:
+- ✅ pytest tests/test_agent.py: 24 个测试全部通过
+- ✅ pytest tests/: 68 个测试全部通过（包含之前的测试）
+- ✅ 所有测试使用 Mock，无真实外部依赖
+- ✅ LangChain 1.2.10 API 兼容性调整完成
+
+### Notes:
+- LangChain API 变更：使用 langchain.agents.create_agent 替代旧的 create_react_agent
+- 工具格式：使用 dict 格式而非 Tool 类（适配新 API）
+- 测试覆盖：MockChatModel 用于模拟 LLM 响应，无需真实 LLM 即可测试流程
+- 下一步：Task 11 将接入真实 LLM 并完善短信发送

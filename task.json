@@ -121,16 +121,17 @@
     },
     {
       "id": 10,
-      "title": "Python 智能体编排 (LangGraph)",
-      "description": "定义 ReAct 思考流与状态图",
+      "title": "Python 智能体编排 (LangChain)",
+      "description": "基于 LangChain ReAct Agent 构建营销决策智能体",
       "steps": [
         "创建 src/agent.py",
-        "定义 AgentState (包含 input, chat_history, context, outcome)",
-        "构建 StateGraph：Trigger -> GatherContext -> RAG -> Decision -> Action",
-        "使用 Mock LLM (模拟返回值) 跑通整个图的流转",
-        "编写测试：输入一个模拟的用户意图，验证图能否走到 Action 节点"
+        "定义 Agent 工具 (Tools): get_user_context, search_knowledge, send_sms",
+        "使用 LangChain 的 create_agent 创建 ReAct Agent",
+        "定义 System Prompt: 注入业务规则 (高消费用户不推销廉价品等)",
+        "使用 Mock LLM (模拟返回值) 跑通整个 Agent 流程",
+        "编写测试：输入模拟的用户意图，验证 Agent 能正确调用工具并做出决策"
       ],
-      "passes": false
+      "passes": true
     },
     {
       "id": 11,
