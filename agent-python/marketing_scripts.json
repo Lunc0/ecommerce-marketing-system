@@ -1,0 +1,32 @@
+[
+  {
+    "scenario": "cart_abandon",
+    "content": "亲，您购物车的宝贝库存告急！现在下单立享免邮，前50名还送精美小样，错过再等一年！",
+    "tags": "inventory_warning, free_shipping, gift"
+  },
+  {
+    "scenario": "cart_abandon",
+    "content": "还在犹豫吗？购物车商品即将恢复原价。点击链接一键结算，为您保留优惠名额30分钟。",
+    "tags": "price_alert, urgency"
+  },
+  {
+    "scenario": "price_drop",
+    "content": "降价提醒：您关注的商品价格已降至历史最低！限时24小时，点击链接立即锁定优惠。",
+    "tags": "price_drop, limited_time"
+  },
+  {
+    "scenario": "new_user",
+    "content": "欢迎新朋友！首单立减20元，全场通用。更有新人专属礼包等你来拿，开启您的品质生活。",
+    "tags": "welcome, discount, coupon"
+  },
+  {
+    "scenario": "high_value_browse",
+    "content": "尊贵的会员，您查看的这款商品是本季限定款。VIP客户享有优先发货权及专属客服服务，期待为您服务。",
+    "tags": "vip, exclusive, service"
+  },
+  {
+    "scenario": "general_promotion",
+    "content": "年中大促火热进行中！全场满300减50，上不封顶。更有百款爆品直降，手慢无！",
+    "tags": "promotion, discount, event"
+  }
+]

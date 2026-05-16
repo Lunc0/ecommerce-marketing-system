@@ -12,7 +12,6 @@ from src.agent import (
     create_marketing_agent,
     MockChatModel
 )
-from src.tools import MarketingActions
 
 
 class TestAgentBusinessRules:
@@ -261,34 +260,18 @@ class TestAgentWithRealLLMConfig:
 class TestAgentWithCooldownRules:
     """Test agent respects cooldown rules."""
 
-    @patch('src.agent.get_user_context')
-    @patch('src.agent.search_knowledge')
-    @patch('src.agent.skip_marketing')
+    @patch('src.agent.create_agent')
     def test_skips_marketing_in_cooldown_period(
-        self, mock_skip, mock_search, mock_get_context
+        self, mock_create_agent
     ):
         """
         Test that agent skips marketing if user is in cooldown period.
         """
-        # User who received message recently
-        mock_get_context.return_value = {
-            'mysql_profile': {
-                'id': 'user-cooldown',
-                'spending_tier': 'HIGH',
-                'identity_tags': ['vip']
-            },
-            'redis_profile': {
-                'last_message_sent': '2024-02-26T22:00:00Z',  # Just sent
-                'click_count_24h': 10
-            }
-        }
-        mock_skip.return_value = {'success': True, 'action': 'SKIP_MARKETING'}
-
-        # Create mock agent that skips
         agent = MarketingAgent.create_mock()
         mock_graph = Mock()
         mock_message = AIMessage(content="用户在冷却期内，跳过本次营销。")
         mock_graph.invoke.return_value = {'messages': [mock_message]}
+        mock_create_agent.return_value = mock_graph
 
         agent.llm = MockChatModel(["用户在冷却期内，跳过本次营销。"])
         agent._initialize_agent()
@@ -349,40 +332,38 @@ class TestAgentToolWrappers:
     def test_get_user_context_formatting(self):
         """Test that user context is properly formatted for LLM."""
         agent = MarketingAgent.create_mock()
+        agent.mcp_client = Mock()
+        agent.mcp_client.call_tool.return_value = {
+            'mysql_profile': {
+                'id': 'user-001',
+                'name': '测试用户',
+                'spending_tier': 'HIGH',
+                'identity_tags': ['vip']
+            },
+            'redis_profile': {'last_click': '2024-02-26'}
+        }
 
-        with patch('src.agent.get_user_context') as mock_get:
-            mock_get.return_value = {
-                'mysql_profile': {
-                    'id': 'user-001',
-                    'name': '测试用户',
-                    'spending_tier': 'HIGH',
-                    'identity_tags': ['vip']
-                },
-                'redis_profile': {'last_click': '2024-02-26'}
-            }
+        result = agent._wrap_get_user_context('user-001')
 
-            result = agent._wrap_get_user_context('user-001')
-
-            assert 'user-001' in result
-            assert 'HIGH' in result
-            assert 'vip' in result
+        assert 'user-001' in result
+        assert 'HIGH' in result
+        assert 'vip' in result
 
     def test_search_knowledge_formatting(self):
         """Test that knowledge search results are properly formatted."""
         agent = MarketingAgent.create_mock()
+        agent.mcp_client = Mock()
+        agent.mcp_client.call_tool.return_value = [
+            {
+                'name': '测试商品',
+                'category': '测试分类',
+                'price': 999,
+                'selling_points': ['测试卖点']
+            }
+        ]
 
-        with patch('src.agent.search_knowledge') as mock_search:
-            mock_search.return_value = [
-                {
-                    'name': '测试商品',
-                    'category': '测试分类',
-                    'price': 999,
-                    'selling_points': '测试卖点'
-                }
-            ]
+        result = agent._wrap_search_knowledge('测试')
 
-            result = agent._wrap_search_knowledge('测试')
-
-            assert '测试商品' in result
-            assert '999' in result
-            assert '测试卖点' in result
+        assert '测试商品' in result
+        assert '999' in result
+        assert '测试卖点' in result

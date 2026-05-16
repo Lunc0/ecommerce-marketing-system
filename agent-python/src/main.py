@@ -4,8 +4,11 @@ Main entry point for the marketing agent.
 """
 
 import logging
+import os
 from dotenv import load_dotenv
-from trigger import KafkaTrigger
+from trigger import HighIntentTrigger
+from agent import MarketingAgent
+from langchain_openai import ChatOpenAI
 
 # Configure logging
 logging.basicConfig(
@@ -21,10 +24,21 @@ def main():
     # Load environment variables
     load_dotenv()
 
-    # Initialize and start the Kafka trigger
-    trigger = KafkaTrigger()
+    # Initialize the LLM (ensure OPENAI_API_KEY is set in .env)
+    llm = ChatOpenAI(
+        model=os.getenv("OPENAI_MODEL_NAME", "gpt-3.5-turbo"),
+        temperature=0.2
+    )
+
+    # Initialize the Marketing Agent
+    agent = MarketingAgent(llm=llm)
+
+    # Initialize the Kafka trigger
+    trigger = HighIntentTrigger()
+    
     try:
-        trigger.start()
+        # Start consuming and pass the agent's process_event method as the callback
+        trigger.consume_forever(callback=agent.process_event)
     except KeyboardInterrupt:
         logger.info("Shutting down Python Agent...")
         trigger.stop()

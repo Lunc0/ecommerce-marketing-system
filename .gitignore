@@ -1,24 +1,25 @@
-# --- 忽略 Trae/Docker 生成的数据 (绝对不能提交!) ---
+﻿# Data volumes (do not commit)
 Config/data/
 Config/data/mysql/
 Config/data/redis/
 Config/data/kafka/
 Config/data/chroma/
-mysql_data/   # 以防万一 AI 以后创建这个
+mysql_data/
 
-# --- 忽略 IDE 和系统文件 ---
+# IDE / local config
 .idea/
 .vscode/
+.claude/
 *.swp
 .DS_Store
 
-# --- Java 忽略项 ---
+# Java
 backend-java/target/
 backend-java/*.class
 backend-java/*.log
 
-# --- Python 忽略项 ---
-agent-python/__pycache__/
+# Python
 agent-python/venv/
 agent-python/.env
-agent-python/*.pyc
+**/__pycache__/
+**/*.pyc

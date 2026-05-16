@@ -2,6 +2,6 @@
 Python Agent source code.
 """
 
-from .tools import DatabaseTools, ProductRAG
+from .agent import MarketingAgent
 
-__all__ = ['DatabaseTools', 'ProductRAG']
+__all__ = ['MarketingAgent']
